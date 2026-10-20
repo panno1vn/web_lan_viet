@@ -1,0 +1,107 @@
+/* Light green and blush foundations shared by every route. */
+:root {
+  --plum-900: #294d3b;
+  --plum-700: #3e654d;
+  --plum-500: #8c3b64;
+  --pink-400: #a94372;
+  --pink-100: #f8e8ee;
+  --cream: #fdfcf7;
+  --leaf: #53734c;
+  --leaf-100: #edf4e5;
+  --ink: #2f493b;
+  --muted: #667265;
+  --line: #dfe6da;
+  --gold: #ead4a9;
+  --radius: 22px;
+  --shadow: 0 16px 40px rgb(47 73 59 / 7%);
+  --font-serif: 'Segoe UI', Arial, sans-serif;
+}
+h1,h2,h3 { font-weight: 750; letter-spacing: -.045em; }
+h2 { font-size: clamp(1.9rem, 3.2vw, 2.8rem); }
+.container { width: min(1240px, 100% - 64px); }
+.eyebrow { font-size: .72rem; letter-spacing: .16em; }
+.announcement { text-align: center; padding: 8px 16px; background: #e4eed9; font-size: .73rem; letter-spacing: .04em; color: #37543e; }
+.announcement span { color: #a94372; margin: 0 18px; }
+.header { background: rgb(253 252 247 / 97%); }
+.header__inner { min-height: 84px; }
+.logo { font-family: Georgia, serif; font-size: 1.5rem; letter-spacing: -.04em; }
+.logo em { color: #a94372; }
+.nav { gap: 32px; font-size: .86rem; }
+.btn { font-size: .87rem; padding: .85em 1.5em; font-weight: 600; }
+.btn--lg { padding: 1em 1.8em; }
+.btn--primary { background: #3e654d; }
+.btn--primary:hover:not(:disabled) { background: #294d3b; box-shadow: 0 8px 20px #294d3b25; }
+.btn--ghost { border-width: 1px; }
+.section { padding: 88px 0; }
+.section--tint { background: #edf4e5; }
+.section__head { margin-bottom: 36px; }
+.link-arrow { color: #41614c; font-size: .87rem; text-underline-offset: 6px; }
+.card { border: 0; border-radius: 22px; background: transparent; }
+.card:hover { box-shadow: none; transform: translateY(-5px); }
+.card__media { height: 285px; border-radius: 22px; background: #f1eee6; overflow: hidden; }
+.card:nth-child(2n) .card__media { background: #edf2e8; }
+.card:nth-child(3n) .card__media { background: #f7e7ee; }
+.card__media svg { width: 160px; height: 240px; transition: transform .6s ease; }
+.card__media:hover svg { transform: scale(1.09) rotate(-4deg); }
+.card__tag { background: #fffaf5; color: #8c3b64; font-weight: 500; top: 18px; left: 18px; }
+.card__body { padding: 20px 5px 0; }
+.card__title { font-size: 1.12rem; letter-spacing: -.02em; }
+.card__species { font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; }
+.card__price { color: #8c3b64; }
+.card .btn { background: transparent; color: #345841; border: 1px solid #bccbb5; }
+.card .btn:hover:not(:disabled) { background: #e4eed9; color: #294d3b; box-shadow: none; }
+.page-hero { background: linear-gradient(110deg,#edf4e5 45%,#f8e8ee); padding: 64px 0; border-radius: 0 0 36px 36px; }
+.form-card { box-shadow: var(--shadow); border-color: #e4e8df; padding: 32px; }
+.detail__media { background: linear-gradient(145deg,#edf4e5,#f8e8ee); border-radius: 36px; }
+.footer { background: #e6eedf; color: #4a614e; margin-top: 0; padding-top: 64px; }
+.footer a,.footer h4,.footer__brand { color: #294d3b; }
+.footer__copy { border-top: 1px solid #cad8c2; padding-top: 24px; }
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s ease; }
+.reveal.is-visible { opacity: 1; transform: none; }
+@media(max-width: 1000px) { .nav { gap: 16px; } .nav__list { gap: 14px; } }
+@media(max-width: 880px) { .nav { top: 120px; padding: 24px 32px; } .nav__list { gap: 16px; } .nav__actions { gap: 16px; } }
+@media(max-width: 600px) {
+ .container { width: calc(100% - 36px); }
+ .announcement { font-size: .64rem; padding: 8px 10px; }
+ .announcement span { margin: 0 5px; }
+ .header__inner { min-height: 72px; }
+ .nav { top: 104px; }
+ .logo { font-size: 1.25rem; }
+ .section { padding: 56px 0; }
+ .section__head { align-items: start; }
+ .grid--products { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px 12px; }
+ .card__media { height: 205px; border-radius: 16px; }
+ .card__media svg { width: 115px; height: 173px; }
+ .card__title { font-size: .95rem; }
+ .card__tag { top: 10px; left: 10px; font-size: .65rem; }
+ .card .btn { padding: .7em .4em; font-size: .75rem; }
+ .card__price { font-size: 1rem; }
+ .form-card { padding: 22px; }
+ .footer__grid { gap: 28px 18px; }
+ .footer__grid > :first-child { grid-column: 1 / -1; }
+}
+@media(prefers-reduced-motion:reduce) {
+ html { scroll-behavior: auto; }
+ *,*::before,*::after { animation: none !important; transition: none !important; }
+ .reveal { opacity: 1; transform: none; }
+}
+
+/* Local orchid photography, shared across catalog, details and cart. */
+.card__media .product-photo { width: 100%; height: 100%; object-fit: cover; transition: transform .65s ease; }
+.card__media:hover .product-photo { transform: scale(1.055); }
+.detail__media { overflow: hidden; }
+.detail__media .product-photo { width: 100%; height: 520px; object-fit: cover; }
+.cart-line .cart-line__photo { width: 64px; height: 72px; object-fit: cover; border-radius: 10px; }
+.product-image-placeholder { display: grid; place-items: center; padding: 24px; color: var(--muted); font-size: .8rem; }
+.photo-credit { font-size: .75rem; color: var(--muted); line-height: 1.8; }
+.photo-credit a { text-decoration: underline; text-underline-offset: 3px; }
+.photo-sources { color: var(--muted); font-size: .7rem; margin: 0 auto 20px; }
+.photo-sources summary { cursor: pointer; width: fit-content; }
+.photo-sources ul { display: grid; gap: 8px; margin-top: 12px; }
+.photo-sources a { text-decoration: underline; }
+@media(max-width:600px) { .detail__media .product-photo { height: 360px; } }
+@media(prefers-reduced-motion:reduce) { .card__media .product-photo { transition: none; } }
+
+.nav__cart { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; transition: background .2s; }
+.nav__cart:hover,.nav__cart.active { background: var(--leaf-100); }
+.nav__cart .badge { position: absolute; top: 0; right: -2px; min-width: 18px; height: 18px; padding: 0 4px; font-size: .62rem; border: 2px solid var(--cream); }

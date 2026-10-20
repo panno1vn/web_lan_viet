@@ -1,0 +1,89 @@
+/* Fontsource bundles local WOFF2 assets; Latin + Vietnamese include full diacritics. */
+:root {
+  --font-sans: 'Be Vietnam Pro', system-ui, sans-serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-script: 'Dancing Script', cursive;
+}
+
+body {
+  font-weight: 400;
+  line-height: 1.75;
+}
+
+h1, h2, h3, h4,
+.logo,
+.hero__stats dt,
+.step__n {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  letter-spacing: -.025em;
+  line-height: 1.3;
+}
+
+button, input, textarea, select,
+.btn, .nav, .eyebrow {
+  font-family: var(--font-sans);
+}
+
+strong, b, .btn, .nav__link, .nav__cart,
+.eyebrow, .badge, .card__tag, .card__species,
+.card__price, .detail__price, .stock, .link-arrow,
+.field label, .footer h4 {
+  font-weight: 500;
+}
+
+.footer h4 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+}
+
+.logo {
+  font-size: 1.45rem;
+  white-space: nowrap;
+}
+
+.logo em {
+  font-style: normal;
+}
+
+.garden-hero h1 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: clamp(3rem, 5.3vw, 4.7rem);
+  letter-spacing: -.035em;
+  line-height: 1.25;
+}
+
+.garden-hero h1 > span {
+  display: inline-block;
+  padding: .04em 0 .12em;
+  font-family: var(--font-script);
+  font-weight: 500;
+  font-size: 1.16em;
+  letter-spacing: 0;
+  line-height: 1.2;
+}
+
+.garden-hero__note {
+  font-family: var(--font-script);
+  font-weight: 500;
+  font-size: 1.1rem;
+  font-style: normal;
+}
+
+.garden-hero__outline {
+  font-family: var(--font-sans);
+  font-weight: 500;
+}
+
+.card__title {
+  line-height: 1.5;
+  letter-spacing: -.015em;
+}
+
+@media (max-width: 600px) {
+  .logo { font-size: 1.2rem; }
+  .garden-hero h1 { font-size: 2.8rem; }
+  .garden-hero__note { font-size: .95rem; }
+  .garden-hero__bottom > span { letter-spacing: .08em; }
+}

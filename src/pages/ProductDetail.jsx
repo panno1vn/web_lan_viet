@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
-import OrchidArt from '../components/OrchidArt.jsx';
+import ProductImage from '../components/ProductImage.jsx';
+import { productPhotos } from '../data/productPhotos.js';
 import { api } from '../api/client.js';
 import { useCart } from '../context/CartContext.jsx';
 import { formatPrice } from '../utils/format.js';
@@ -53,13 +54,14 @@ export default function ProductDetail() {
         </nav>
         <div className="detail">
           <div className="detail__media">
-            <OrchidArt color={product.color} accent={product.accent} size={240} stem />
+            <ProductImage key={product.slug} product={product} loading="eager" />
           </div>
           <div className="detail__info">
             <p className="eyebrow">{product.species}</p>
             <h1>{product.name}</h1>
             <p className="detail__price">{formatPrice(product.price)}</p>
             <p>{product.description}</p>
+            {productPhotos[product.slug] && <p className="photo-credit">Ảnh tham khảo dòng lan, không phải ảnh chậu hàng thực tế. Ảnh: <a href={productPhotos[product.slug].source} target="_blank" rel="noreferrer">{productPhotos[product.slug].author}</a> · <a href={productPhotos[product.slug].licenseUrl} target="_blank" rel="noreferrer">{productPhotos[product.slug].licenseLabel}</a>.</p>}
             <div className="detail__care">
               <h2>Cách chăm sóc</h2>
               <p>{product.care}</p>

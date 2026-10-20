@@ -45,36 +45,29 @@ export default function Contact() {
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
   return (
-    <div className="page">
-      <section className="page-hero page-hero--compact">
-        <div className="container">
-          <p className="eyebrow">Liên hệ</p>
-          <h1>Chúng tôi luôn sẵn sàng lắng nghe</h1>
-        </div>
-      </section>
-      <section className="section">
+      <section id="lien-he" className="section about-contact" aria-labelledby="contact-heading">
         <div className="container two-col">
           <div className="contact-info">
-            <h2>Thông tin vườn lan</h2>
+            <p className="eyebrow">LIÊN HỆ VỚI VƯỜN</p>
+            <h2 id="contact-heading">Một lời nhắn nhỏ,<br />bắt đầu một <em>câu chuyện.</em></h2>
+            <p>Bạn cần tư vấn chọn lan, báo giá sỉ hay đặt lịch tham quan vườn? Hãy để lại lời nhắn.</p>
             <ul>
               <li><strong>Địa chỉ:</strong> 123 Đường Hoa Lan, Phường 8, Đà Lạt</li>
               <li><strong>Hotline:</strong> 0900 000 000</li>
               <li><strong>Email:</strong> lienhe@lanviet.example</li>
               <li><strong>Giờ mở cửa:</strong> 7:00 – 20:00 tất cả các ngày</li>
             </ul>
-            <p>Bạn cần tư vấn chọn lan, báo giá sỉ hay đặt lịch tham quan vườn? Hãy để lại lời nhắn.</p>
           </div>
           <form className="form-card" onSubmit={handleSubmit} noValidate>
             <FormField label="Họ và tên" value={form.name} onChange={set('name')} maxLength={80} autoComplete="name" error={errors.name} />
             <FormField label="Email" type="email" value={form.email} onChange={set('email')} maxLength={254} autoComplete="email" error={errors.email} />
             <FormField label="Nội dung" as="textarea" rows={5} value={form.message} onChange={set('message')} maxLength={2000} error={errors.message} />
-            {status.text && <p className={`alert alert--${status.type}`}>{status.text}</p>}
+            {status.text && <p className={`alert alert--${status.type}`} role="status">{status.text}</p>}
             <button type="submit" className="btn btn--primary btn--block" disabled={sending}>
               {sending ? 'Đang gửi…' : 'Gửi lời nhắn'}
             </button>
           </form>
         </div>
       </section>
-    </div>
   );
 }

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
-import OrchidArt from '../components/OrchidArt.jsx';
+import ProductImage from '../components/ProductImage.jsx';
 import FormField from '../components/FormField.jsx';
 import { api } from '../api/client.js';
 import { useCart } from '../context/CartContext.jsx';
@@ -91,7 +91,7 @@ export default function Cart() {
               <ul className="cart__lines">
                 {lines.map(({ productId, quantity, product }) => (
                   <li key={productId} className="cart-line">
-                    <OrchidArt color={product.color} accent={product.accent} size={64} />
+                    <ProductImage product={product} className="cart-line__photo" />
                     <div className="cart-line__info">
                       <Link to={`/san-pham/${product.slug}`}>{product.name}</Link>
                       <small>{formatPrice(product.price)}</small>

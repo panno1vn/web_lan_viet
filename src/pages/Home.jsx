@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import OrchidArt from '../components/OrchidArt.jsx';
+import GardenHero from '../components/GardenHero.jsx';
 import ProductCard from '../components/ProductCard.jsx';
 import { api } from '../api/client.js';
 import '../styles/home.css';
@@ -9,7 +10,7 @@ const PROMISES = [
   { title: 'Giao nhanh 2 giờ', text: 'Nội thành Hà Nội, TP.HCM, Đà Lạt' },
   { title: 'Bảo hành 7 ngày', text: 'Đổi cây mới nếu hoa héo, rụng nụ' },
   { title: 'Tư vấn trọn đời', text: 'Hướng dẫn chăm sóc miễn phí' },
-  { title: 'Thanh toán an toàn', text: 'Kết nối mã hóa HTTPS' },
+  { title: 'Tuyển chọn từ vườn', text: 'Chăm chút từng cành, từng nụ' },
 ];
 
 const COLLECTIONS = [
@@ -23,12 +24,6 @@ const STEPS = [
   { n: '01', title: 'Ánh sáng', text: 'Đặt lan nơi có ánh sáng tán xạ, tránh nắng gắt buổi trưa chiếu trực tiếp.' },
   { n: '02', title: 'Tưới nước', text: 'Tưới khi giá thể khô mặt, khoảng 1–2 lần mỗi tuần, tránh đọng nước ở nách lá.' },
   { n: '03', title: 'Dinh dưỡng', text: 'Bón phân NPK loãng mỗi tuần một lần trong mùa sinh trưởng.' },
-];
-
-const REVIEWS = [
-  { name: 'Chị Minh Thư', place: 'Hà Nội', text: 'Chậu hồ điệp tặng mẹ dịp Tết nở bền gần 3 tháng. Đóng gói rất cẩn thận.' },
-  { name: 'Anh Quốc Bảo', place: 'TP.HCM', text: 'Được tư vấn kỹ cách chăm dendro, giờ cây đã ra lứa hoa thứ hai.' },
-  { name: 'Cô Thanh Hà', place: 'Đà Lạt', text: 'Lan hài ở vườn rất khỏe, đúng mô tả. Sẽ tiếp tục ủng hộ.' },
 ];
 
 export default function Home() {
@@ -47,49 +42,7 @@ export default function Home() {
 
   return (
     <div className="home">
-      {/* HERO */}
-      <section className="hero">
-        <div className="container hero__inner">
-          <div className="hero__text">
-            <p className="eyebrow">Vườn lan Đà Lạt · Từ 2012</p>
-            <h1>
-              Vẻ đẹp tinh khôi của <span>hoa lan Việt</span>
-            </h1>
-            <p className="hero__lead">
-              Hơn 40 giống lan được ươm trồng tại vườn, tuyển chọn từng chậu và giao tận tay bạn trong ngày.
-              Món quà sang trọng cho tân gia, khai trương và ngày Tết.
-            </p>
-            <div className="hero__actions">
-              <Link to="/san-pham" className="btn btn--primary btn--lg">
-                Mua lan ngay
-              </Link>
-              <Link to="/about-us" className="btn btn--ghost btn--lg">
-                Về vườn lan
-              </Link>
-            </div>
-            <dl className="hero__stats">
-              <div>
-                <dt>12+</dt>
-                <dd>năm kinh nghiệm</dd>
-              </div>
-              <div>
-                <dt>40+</dt>
-                <dd>giống lan</dd>
-              </div>
-              <div>
-                <dt>15k</dt>
-                <dd>khách hàng</dd>
-              </div>
-            </dl>
-          </div>
-          <div className="hero__art" aria-hidden="true">
-            <div className="hero__circle" />
-            <OrchidArt className="hero__flower hero__flower--1" color="#c2569b" accent="#f2c94c" size={200} stem />
-            <OrchidArt className="hero__flower hero__flower--2" color="#f7f3f8" accent="#e8c547" size={150} stem />
-            <OrchidArt className="hero__flower hero__flower--3" color="#8e3c9e" accent="#f2d16b" size={120} stem />
-          </div>
-        </div>
-      </section>
+      <GardenHero />
 
       {/* CAM KẾT */}
       <section className="promises">
@@ -156,7 +109,7 @@ export default function Home() {
               Lan không khó tính như bạn nghĩ. Chỉ cần nắm 3 nguyên tắc cơ bản, chậu lan của bạn sẽ khỏe mạnh và
               ra hoa đều đặn mỗi năm.
             </p>
-            <Link to="/lien-he" className="btn btn--ghost">
+            <Link to="/about-us#lien-he" className="btn btn--ghost">
               Hỏi chuyên gia
             </Link>
           </div>
@@ -174,26 +127,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CẢM NHẬN */}
-      <section className="section section--tint">
-        <div className="container">
-          <div className="section__head section__head--center">
-            <p className="eyebrow">Khách hàng nói gì</p>
-            <h2>Niềm vui nở hoa</h2>
-          </div>
-          <div className="reviews">
-            {REVIEWS.map((r) => (
-              <figure key={r.name} className="review">
-                <blockquote>“{r.text}”</blockquote>
-                <figcaption>
-                  <strong>{r.name}</strong> · {r.place}
-                </figcaption>
-              </figure>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* CTA */}
       <section className="cta">
         <div className="container cta__inner">
@@ -201,7 +134,7 @@ export default function Home() {
             <h2>Cần lan cho sự kiện, văn phòng?</h2>
             <p>Nhận báo giá sỉ và thiết kế chậu lan theo yêu cầu trong 24 giờ.</p>
           </div>
-          <Link to="/lien-he" className="btn btn--light btn--lg">
+          <Link to="/about-us#lien-he" className="btn btn--light btn--lg">
             Liên hệ báo giá
           </Link>
         </div>

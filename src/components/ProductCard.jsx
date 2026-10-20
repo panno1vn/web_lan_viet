@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
-import OrchidArt from './OrchidArt.jsx';
+import ProductImage from './ProductImage.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import { formatPrice } from '../utils/format.js';
 
@@ -18,7 +18,7 @@ export default function ProductCard({ product }) {
   return (
     <article className="card">
       <Link to={`/san-pham/${product.slug}`} className="card__media">
-        <OrchidArt color={product.color} accent={product.accent} size={130} stem />
+        <ProductImage product={product} />
         {product.featured === 1 && <span className="card__tag">Bán chạy</span>}
       </Link>
       <div className="card__body">

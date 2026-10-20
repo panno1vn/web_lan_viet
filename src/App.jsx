@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router';
+import { Navigate, Route, Routes } from 'react-router';
 import Layout from './components/Layout.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Home from './pages/Home.jsx';
@@ -6,7 +6,6 @@ import AboutUs from './pages/AboutUs.jsx';
 import Products from './pages/Products.jsx';
 import ProductDetail from './pages/ProductDetail.jsx';
 import Cart from './pages/Cart.jsx';
-import Contact from './pages/Contact.jsx';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import Account from './pages/Account.jsx';
@@ -22,7 +21,7 @@ export default function App() {
         <Route path="san-pham" element={<Products />} />
         <Route path="san-pham/:slug" element={<ProductDetail />} />
         <Route path="gio-hang" element={<Cart />} />
-        <Route path="lien-he" element={<Contact />} />
+        <Route path="lien-he" element={<Navigate to="/about-us#lien-he" replace />} />
         <Route path="dang-nhap" element={<Login />} />
         <Route path="dang-ky" element={<Register />} />
         <Route element={<ProtectedRoute />}>

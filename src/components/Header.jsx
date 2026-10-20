@@ -8,7 +8,6 @@ const NAV = [
   { to: '/', label: 'Trang chủ', end: true },
   { to: '/san-pham', label: 'Sản phẩm' },
   { to: '/about-us', label: 'Giới thiệu' },
-  { to: '/lien-he', label: 'Liên hệ' },
 ];
 
 export default function Header() {
@@ -18,7 +17,7 @@ export default function Header() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  useEffect(() => setOpen(false), [location.pathname]);
+  useEffect(() => setOpen(false), [location.pathname, location.hash]);
 
   async function handleLogout() {
     await logout();
@@ -27,6 +26,7 @@ export default function Header() {
 
   return (
     <header className="header">
+      <div className="announcement">Từ vườn lan đến ngôi nhà bạn <span aria-hidden="true">✳</span> Gói trọn một chút yêu thương</div>
       <div className="container header__inner">
         <Link to="/" className="logo" aria-label="Lan Việt Garden - Trang chủ">
           <OrchidArt size={36} color="#c2569b" accent="#f2c94c" />
@@ -57,8 +57,12 @@ export default function Header() {
             ))}
           </ul>
           <div className="nav__actions">
-            <NavLink to="/gio-hang" className="nav__cart">
-              Giỏ hàng <span className="badge">{count}</span>
+            <NavLink to="/gio-hang" className="nav__cart" aria-label={`Giỏ hàng, ${count} sản phẩm`} title="Giỏ hàng">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.8a1 1 0 0 0 1-.8L21 8H6" />
+                <circle cx="9" cy="20" r="1" /><circle cx="18" cy="20" r="1" />
+              </svg>
+              <span className="badge" aria-hidden="true">{count}</span>
             </NavLink>
             {user ? (
               <>

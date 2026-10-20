@@ -1,0 +1,65 @@
+.garden-atmosphere {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+}
+.garden-particle {
+  position: absolute;
+  top: -55px;
+  left: 5%;
+  animation: garden-fall 24s linear infinite;
+}
+.garden-particle i {
+  display: block;
+  width: 17px;
+  height: 25px;
+  animation: garden-flutter 5s ease-in-out infinite alternate;
+}
+.drifting-leaf {
+  border-radius: 2% 90% 4% 90%;
+  background: linear-gradient(115deg, #a5bf87 45%, #7e9d69 48%, #c6d8b0 53%);
+  opacity: .48;
+}
+.drifting-petal {
+  border-radius: 80% 20% 75% 35%;
+  background: radial-gradient(ellipse at 25% 25%, #f8e0eb, #d699b7);
+  opacity: .5;
+}
+.garden-particle--2 { left: 14%; animation-duration: 29s; animation-delay: -8s; }
+.garden-particle--3 { left: 23%; animation-duration: 25s; animation-delay: -18s; }
+.garden-particle--4 { left: 32%; animation-duration: 31s; animation-delay: -4s; }
+.garden-particle--5 { left: 41%; animation-duration: 27s; animation-delay: -22s; }
+.garden-particle--6 { left: 50%; animation-duration: 33s; animation-delay: -12s; }
+.garden-particle--7 { left: 59%; animation-duration: 26s; animation-delay: -16s; }
+.garden-particle--8 { left: 68%; animation-duration: 30s; animation-delay: -26s; }
+.garden-particle--9 { left: 77%; animation-duration: 28s; animation-delay: -6s; }
+.garden-particle--10 { left: 86%; animation-duration: 34s; animation-delay: -20s; }
+.garden-particle--11 { left: 95%; animation-duration: 25s; animation-delay: -10s; }
+.garden-particle--12 { left: 10%; animation-duration: 32s; animation-delay: -29s; }
+.garden-particle--13 { left: 37%; animation-duration: 35s; animation-delay: -14s; }
+.garden-particle--14 { left: 63%; animation-duration: 28s; animation-delay: -24s; }
+.garden-particle--15 { left: 82%; animation-duration: 31s; animation-delay: -3s; }
+.garden-particle--16 { left: 47%; animation-duration: 36s; animation-delay: -31s; }
+.garden-particle:nth-child(2n) i { width: 11px; height: 17px; animation-duration: 7s; animation-delay: -3s; }
+.garden-particle:nth-child(3n) i { animation-direction: alternate-reverse; }
+.floating-glow { position: absolute; width: 190px; height: 190px; border-radius: 50%; opacity: .13; animation: garden-glow 18s ease-in-out infinite alternate; }
+.floating-glow--green { left: -100px; top: 35%; background: radial-gradient(circle,#bdd3a1,transparent 70%); }
+.floating-glow--pink { right: -100px; top: 65%; background: radial-gradient(circle,#e7b3cb,transparent 70%); animation-delay: -9s; }
+.atmosphere-toggle { position: fixed; right: 18px; bottom: 18px; z-index: 21; display: flex; align-items: center; gap: 7px; padding: 9px 14px; border: 1px solid #d5dfcf; border-radius: 999px; background: #fdfcf7ed; color: #436149; font: inherit; font-size: .68rem; cursor: pointer; box-shadow: 0 3px 15px #294d3b0a; }
+.garden-atmosphere--paused * { animation-play-state: paused !important; }
+@keyframes garden-fall {
+  0% { transform: translate3d(-24px, -40px, 0) rotate(-25deg); }
+  50% { transform: translate3d(35px, 50vh, 0) rotate(110deg); }
+  100% { transform: translate3d(-18px, calc(100vh + 100px), 0) rotate(250deg); }
+}
+@keyframes garden-flutter { from { transform: translateX(-14px) rotateY(-35deg) rotate(-20deg); } to { transform: translateX(22px) rotateY(45deg) rotate(30deg); } }
+@keyframes garden-glow { to { transform: translate3d(20px,-60px,0) scale(1.25); } }
+@media(max-width:600px) {
+  .garden-particle:nth-child(n+9) { display: none; }
+  .garden-particle i { width: 12px; height: 18px; }
+  .atmosphere-toggle { right: 10px; bottom: 10px; padding: 8px 11px; font-size: .6rem; }
+}
+@media(prefers-reduced-motion:reduce) { .garden-atmosphere,.atmosphere-toggle { display: none; } }
