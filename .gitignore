@@ -1,0 +1,28 @@
+# Phụ thuộc & bản build
+node_modules/
+dist/
+
+# Bí mật & cấu hình môi trường - KHÔNG đưa lên GitHub
+.env
+.env.*
+!.env.example
+
+# Cơ sở dữ liệu & log
+server/data/
+*.db
+*.db-*
+*.log
+
+# File backup của trình soạn thảo (§3.4)
+*.bak
+*.backup
+*.old
+*.orig
+*.swp
+*~
+
+# Hệ điều hành / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
