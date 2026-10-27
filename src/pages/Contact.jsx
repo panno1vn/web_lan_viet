@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import FormField from '../components/FormField.jsx';
-import { api } from '../api/client.js';
+import { contactApi } from '../api/services.js';
 import { rules } from '../utils/format.js';
 
 const EMPTY = { name: '', email: '', message: '' };
@@ -28,10 +28,7 @@ export default function Contact() {
     if (!validate()) return;
     setSending(true);
     try {
-      const data = await api('/contact', {
-        method: 'POST',
-        body: { name: form.name.trim(), email: form.email.trim(), message: form.message.trim() },
-      });
+      const data = await contactApi.send({ name: form.name.trim(), email: form.email.trim(), message: form.message.trim() });
       setForm(EMPTY);
       setStatus({ type: 'success', text: data.message });
     } catch (err) {

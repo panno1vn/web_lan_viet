@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import ProductImage from '../components/ProductImage.jsx';
 import FormField from '../components/FormField.jsx';
-import { api } from '../api/client.js';
+import { orderApi, productApi } from '../api/services.js';
 import { useCart } from '../context/CartContext.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { formatPrice, rules } from '../utils/format.js';
@@ -19,8 +19,8 @@ export default function Cart() {
 
   // Lấy giá hiện tại từ máy chủ, không dùng giá lưu trên trình duyệt
   useEffect(() => {
-    api('/products')
-      .then((d) => setCatalog(new Map(d.products.map((p) => [p.id, p]))))
+    productApi.list()
+      .then((products) => setCatalog(new Map(products.map((p) => [p.id, p]))))
       .catch((e) => setServerError(e.message));
   }, []);
 
@@ -45,15 +45,12 @@ export default function Cart() {
     if (!validate()) return;
     setSubmitting(true);
     try {
-      const { orderId } = await api('/orders', {
-        method: 'POST',
-        body: {
+      const orderId = await orderApi.create({
           // Chỉ gửi mã sản phẩm + số lượng; máy chủ tự tính giá
           items: lines.map((l) => ({ productId: l.productId, quantity: l.quantity })),
           phone: form.phone.trim(),
           address: form.address.trim(),
           note: form.note.trim(),
-        },
       });
       clear();
       navigate(`/tai-khoan/don-hang/${orderId}`, { state: { justOrdered: true } });

@@ -1,5 +1,16 @@
-// Gọi API cùng origin. Cookie phiên là HttpOnly nên JavaScript không đọc được (§2.1);
-// mọi request thay đổi dữ liệu đều kèm CSRF token trong header (§2.2).
+import axios from 'axios';
+
+// Một axios instance dùng chung cho toàn bộ ứng dụng, gọi tới API ASP.NET Core cùng origin (/api).
+// - Cookie đăng nhập là HttpOnly nên JavaScript không đọc được (§2.1); trình duyệt tự gửi kèm.
+// - Mọi request thay đổi dữ liệu (POST/PUT/DELETE) được interceptor gắn anti-forgery token
+//   vào header X-CSRF-Token (§2.2).
+export const http = axios.create({
+  baseURL: '/api',
+  timeout: 15000,
+  withCredentials: true,
+  headers: { Accept: 'application/json' },
+});
+
 let csrfToken = null;
 
 export class ApiError extends Error {
@@ -11,43 +22,40 @@ export class ApiError extends Error {
 }
 
 async function fetchCsrf() {
-  const res = await fetch('/api/csrf', { credentials: 'same-origin' });
-  if (!res.ok) throw new ApiError('Không kết nối được máy chủ.', res.status);
-  csrfToken = (await res.json()).csrfToken;
+  const { data } = await axios.get('/api/csrf', { withCredentials: true });
+  csrfToken = data.csrfToken;
   return csrfToken;
 }
 
-export function setCsrfToken(token) {
-  csrfToken = token;
-}
+const UNSAFE = ['post', 'put', 'delete', 'patch'];
 
-export async function api(path, { method = 'GET', body } = {}, retried = false) {
-  const headers = { Accept: 'application/json' };
-  if (method !== 'GET') {
-    headers['Content-Type'] = 'application/json';
-    headers['X-CSRF-Token'] = csrfToken ?? (await fetchCsrf());
+// Request interceptor: gắn CSRF token cho các phương thức thay đổi dữ liệu
+http.interceptors.request.use(async (config) => {
+  if (UNSAFE.includes(config.method)) {
+    config.headers['X-CSRF-Token'] = csrfToken ?? (await fetchCsrf());
   }
+  return config;
+});
 
-  let res;
-  try {
-    res = await fetch(`/api${path}`, {
-      method,
-      headers,
-      credentials: 'same-origin',
-      body: body === undefined ? undefined : JSON.stringify(body),
-    });
-  } catch {
-    throw new ApiError('Không kết nối được máy chủ. Vui lòng thử lại.', 0);
-  }
-
-  const data = await res.json().catch(() => ({}));
-
-  // Phiên/CSRF token hết hạn -> lấy token mới và thử lại đúng một lần
-  if (res.status === 403 && data.code === 'CSRF' && !retried) {
-    await fetchCsrf();
-    return api(path, { method, body }, true);
-  }
-  if (!res.ok) throw new ApiError(data.error || 'Đã có lỗi xảy ra.', res.status, data.field);
-  if (typeof data.csrfToken === 'string') csrfToken = data.csrfToken;
-  return data;
-}
+// Response interceptor:
+//  - lưu CSRF token mới (máy chủ cấp lại sau khi đăng nhập/đăng xuất/đổi mật khẩu)
+//  - token hết hạn => lấy token mới và gửi lại request đúng một lần
+//  - chuẩn hóa lỗi thành ApiError { message, status, field }
+http.interceptors.response.use(
+  (response) => {
+    if (typeof response.data?.csrfToken === 'string') csrfToken = response.data.csrfToken;
+    return response;
+  },
+  async (error) => {
+    const { config, response } = error;
+    if (response?.status === 403 && response.data?.code === 'CSRF' && !config._retried) {
+      config._retried = true;
+      csrfToken = null;
+      return http(config);
+    }
+    if (!response) {
+      throw new ApiError('Không kết nối được máy chủ. Vui lòng thử lại.', 0);
+    }
+    throw new ApiError(response.data?.error || 'Đã có lỗi xảy ra.', response.status, response.data?.field ?? undefined);
+  },
+);

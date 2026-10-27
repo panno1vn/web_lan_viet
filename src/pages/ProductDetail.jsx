@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import ProductImage from '../components/ProductImage.jsx';
 import { productPhotos } from '../data/productPhotos.js';
-import { api } from '../api/client.js';
+import { productApi } from '../api/services.js';
 import { useCart } from '../context/CartContext.jsx';
 import { formatPrice } from '../utils/format.js';
 import NotFound from './NotFound.jsx';
@@ -23,10 +23,10 @@ export default function ProductDetail() {
       setStatus('notfound');
       return undefined;
     }
-    api(`/products/${slug}`)
-      .then((d) => {
+    productApi.get(slug)
+      .then((p) => {
         if (!alive) return;
-        setProduct(d.product);
+        setProduct(p);
         setStatus('ok');
       })
       .catch((e) => alive && setStatus(e.status === 404 ? 'notfound' : 'error'));

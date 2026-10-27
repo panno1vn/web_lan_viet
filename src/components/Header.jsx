@@ -66,6 +66,11 @@ export default function Header() {
             </NavLink>
             {user ? (
               <>
+                {user.role === 'admin' && (
+                  <NavLink to="/quan-tri" className="nav__link">
+                    Quản trị
+                  </NavLink>
+                )}
                 <NavLink to="/tai-khoan" className="nav__link">
                   {user.fullName}
                 </NavLink>

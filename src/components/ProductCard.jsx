@@ -19,7 +19,7 @@ export default function ProductCard({ product, detailed = false }) {
     <article className="card">
       <Link to={`/san-pham/${product.slug}`} className="card__media">
         <ProductImage product={product} />
-        {product.featured === 1 && <span className="card__tag">Bán chạy</span>}
+        {product.featured && <span className="card__tag">Bán chạy</span>}
         {detailed && <span className="card__view">Xem chi tiết ↗</span>}
       </Link>
       <div className="card__body">

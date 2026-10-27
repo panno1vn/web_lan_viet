@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import FormField from '../components/FormField.jsx';
-import { api } from '../api/client.js';
+import { authApi, orderApi } from '../api/services.js';
 import { useAuth } from '../context/AuthContext.jsx';
-import { formatDate, formatPrice, ORDER_STATUS, passwordProblems } from '../utils/format.js';
+import { formatDate, formatPrice, ORDER_STATUS, passwordProblems, rules } from '../utils/format.js';
 
 function ChangePassword() {
   const [form, setForm] = useState({ currentPassword: '', newPassword: '', confirm: '' });
@@ -24,10 +24,7 @@ function ChangePassword() {
 
     setBusy(true);
     try {
-      const data = await api('/auth/change-password', {
-        method: 'POST',
-        body: { currentPassword: form.currentPassword, newPassword: form.newPassword },
-      });
+      const data = await authApi.changePassword(form.currentPassword, form.newPassword);
       setForm({ currentPassword: '', newPassword: '', confirm: '' });
       setStatus({ type: 'success', text: data.message });
     } catch (err) {
@@ -54,14 +51,56 @@ function ChangePassword() {
   );
 }
 
+// PUT /api/auth/profile: cập nhật họ tên
+function UpdateProfile() {
+  const { user, setUser } = useAuth();
+  const [fullName, setFullName] = useState(user.fullName);
+  const [error, setError] = useState('');
+  const [status, setStatus] = useState({ type: '', text: '' });
+  const [busy, setBusy] = useState(false);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setStatus({ type: '', text: '' });
+    const name = fullName.trim();
+    if (name.length < 2 || name.length > 80 || !rules.name.test(name)) {
+      setError('Họ tên chỉ gồm chữ cái, 2–80 ký tự.');
+      return;
+    }
+    setError('');
+    setBusy(true);
+    try {
+      const data = await authApi.updateProfile(name);
+      setUser(data.user);
+      setStatus({ type: 'success', text: data.message });
+    } catch (err) {
+      if (err.field === 'fullName') setError(err.message);
+      else setStatus({ type: 'error', text: err.message });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form className="form-card" onSubmit={handleSubmit} noValidate>
+      <h2>Thông tin cá nhân</h2>
+      <FormField label="Họ và tên" value={fullName} onChange={(e) => setFullName(e.target.value)} maxLength={80} autoComplete="name" error={error} />
+      {status.text && <p className={`alert alert--${status.type}`}>{status.text}</p>}
+      <button type="submit" className="btn btn--primary" disabled={busy}>
+        {busy ? 'Đang lưu…' : 'Lưu thông tin'}
+      </button>
+    </form>
+  );
+}
+
 export default function Account() {
   const { user } = useAuth();
   const [orders, setOrders] = useState(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    api('/orders')
-      .then((d) => setOrders(d.orders))
+    orderApi.mine()
+      .then(setOrders)
       .catch((e) => setError(e.message));
   }, []);
 
@@ -101,7 +140,7 @@ export default function Account() {
                       <td>
                         <Link to={`/tai-khoan/don-hang/${o.id}`}>#{o.id}</Link>
                       </td>
-                      <td>{formatDate(o.created_at)}</td>
+                      <td>{formatDate(o.createdAt)}</td>
                       <td>{formatPrice(o.total)}</td>
                       <td>{ORDER_STATUS[o.status] ?? o.status}</td>
                     </tr>
@@ -110,7 +149,10 @@ export default function Account() {
               </table>
             )}
           </div>
-          <ChangePassword />
+          <div className="account-forms">
+            <UpdateProfile />
+            <ChangePassword />
+          </div>
         </div>
       </section>
     </div>

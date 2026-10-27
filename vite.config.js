@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// Header bảo mật cho dev server. CSP đầy đủ được đặt ở server/index.js khi chạy production
+// Header bảo mật cho dev server. CSP đầy đủ do API ASP.NET Core đặt (backend/LanViet.Api/Security/SecurityMiddleware.cs)
 // (Vite dev cần script inline cho hot reload nên không bật CSP strict ở đây).
 const securityHeaders = {
   'X-Content-Type-Options': 'nosniff',
@@ -10,7 +10,8 @@ const securityHeaders = {
 };
 
 const apiProxy = {
-  '/api': { target: 'http://localhost:3001', changeOrigin: false },
+  // Chuyển tiếp /api tới API ASP.NET Core (cổng 5080)
+  '/api': { target: 'http://localhost:5080', changeOrigin: false },
 };
 
 export default defineConfig({

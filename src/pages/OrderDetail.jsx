@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router';
-import { api } from '../api/client.js';
+import { orderApi } from '../api/services.js';
 import { formatDate, formatPrice, ORDER_STATUS } from '../utils/format.js';
 import NotFound from './NotFound.jsx';
 
@@ -9,6 +9,8 @@ export default function OrderDetail() {
   const location = useLocation();
   const [data, setData] = useState(null);
   const [status, setStatus] = useState('loading');
+  const [cancelling, setCancelling] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
 
   useEffect(() => {
     if (!/^[1-9][0-9]{0,9}$/.test(id ?? '')) {
@@ -16,7 +18,7 @@ export default function OrderDetail() {
       return;
     }
     // Máy chủ chỉ trả đơn hàng thuộc về người dùng đang đăng nhập (chống IDOR)
-    api(`/orders/${id}`)
+    orderApi.get(id)
       .then((d) => {
         setData(d);
         setStatus('ok');
@@ -29,6 +31,23 @@ export default function OrderDetail() {
   if (status === 'error') return <p className="container alert alert--error">Không tải được đơn hàng.</p>;
 
   const { order, items } = data;
+
+  // DELETE /api/orders/{id}: hủy đơn khi còn "Chờ xác nhận"; máy chủ kiểm tra lại quyền và trạng thái
+  async function handleCancel() {
+    if (!window.confirm('Bạn chắc chắn muốn hủy đơn hàng này?')) return;
+    setCancelling(true);
+    setMessage({ type: '', text: '' });
+    try {
+      const result = await orderApi.cancel(order.id);
+      setData(await orderApi.get(order.id));
+      setMessage({ type: 'success', text: result.message });
+    } catch (err) {
+      setMessage({ type: 'error', text: err.message });
+    } finally {
+      setCancelling(false);
+    }
+  }
+
   return (
     <div className="page">
       <div className="container section">
@@ -38,11 +57,19 @@ export default function OrderDetail() {
         <Link to="/tai-khoan" className="link-arrow">
           ← Về tài khoản
         </Link>
-        <h1>Đơn hàng #{order.id}</h1>
+        <div className="order-head">
+          <h1>Đơn hàng #{order.id}</h1>
+          {order.status === 'pending' && (
+            <button type="button" className="btn btn--ghost" onClick={handleCancel} disabled={cancelling}>
+              {cancelling ? 'Đang hủy…' : 'Hủy đơn hàng'}
+            </button>
+          )}
+        </div>
+        {message.text && <p className={`alert alert--${message.type}`} role="status">{message.text}</p>}
         <dl className="order-meta">
           <div>
             <dt>Ngày đặt</dt>
-            <dd>{formatDate(order.created_at)}</dd>
+            <dd>{formatDate(order.createdAt)}</dd>
           </div>
           <div>
             <dt>Trạng thái</dt>
@@ -78,9 +105,9 @@ export default function OrderDetail() {
                 <td>
                   <Link to={`/san-pham/${it.slug}`}>{it.name}</Link>
                 </td>
-                <td>{formatPrice(it.unit_price)}</td>
+                <td>{formatPrice(it.unitPrice)}</td>
                 <td>{it.quantity}</td>
-                <td>{formatPrice(it.unit_price * it.quantity)}</td>
+                <td>{formatPrice(it.unitPrice * it.quantity)}</td>
               </tr>
             ))}
           </tbody>

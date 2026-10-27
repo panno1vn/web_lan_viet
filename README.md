@@ -1,85 +1,181 @@
 # Lan Việt Garden – Website bán hoa lan
 
-Đồ án môn **An toàn ứng dụng web và CSDL**. Website bán hoa lan xây dựng bằng **ReactJS + Vite**, điều hướng bằng **react-router**, có API **Express + SQLite** để áp dụng các quy tắc bảo mật trong `quy-tac-trien-khai-web-an-toan.md`.
+Đồ án môn **An toàn ứng dụng web và CSDL**.
 
-## Chạy project
+| Phần | Công nghệ |
+| --- | --- |
+| Front-end | ReactJS + Vite, react-router, **Axios** |
+| Back-end | **ASP.NET Core 8 Web API** (controllers) |
+| CSDL | **SQL Server** qua **Entity Framework Core 8** (code-first, migration) |
 
-Yêu cầu: Node.js ≥ 22.13 (dùng module `node:sqlite` có sẵn).
+Các quy tắc bảo mật áp dụng theo [`quy-tac-trien-khai-web-an-toan.md`](quy-tac-trien-khai-web-an-toan.md).
+
+---
+
+## 1. Chạy project
+
+Yêu cầu: Node.js ≥ 20, .NET SDK 8, SQL Server (Developer/Express) chạy ở `localhost` với Windows Authentication.
 
 ```bash
-npm install
-npm run dev          # web: http://localhost:3000  ·  API: http://localhost:3001 (Vite proxy /api)
+npm run setup     # npm install + cài dotnet-ef (dotnet tool restore) + tạo CSDL bằng migration
+npm run dev       # web: http://localhost:3000  ·  API: http://localhost:5080 (Vite proxy /api)
 ```
 
-Chạy bản production (một máy chủ duy nhất ở cổng 3000):
+Swagger (chỉ bật ở môi trường Development): http://localhost:5080/swagger
+
+Cấp quyền quản trị cho một tài khoản đã đăng ký (không có tài khoản admin mặc định):
 
 ```bash
-npm run build
-npm start            # http://localhost:3000
+dotnet run --project backend/LanViet.Api -- promote-admin email@cua-ban.vn
 ```
 
-Có thể tạo file `.env` từ `.env.example` để đổi cấu hình. **Không commit file `.env`.**
+Chạy bản production (ASP.NET Core phục vụ luôn bản build React ở cổng 3000):
 
-## Các trang (react-router)
+```bash
+# Chuỗi kết nối production KHÔNG đặt trong file cấu hình, mà truyền qua biến môi trường:
+#   ConnectionStrings__Default="Server=...;Database=LanVietShop;User Id=lanviet_app;Password=...;Encrypt=True"
+npm start
+```
 
-| URL | Trang |
+---
+
+## 2. Back-end ASP.NET Core
+
+```
+backend/LanViet.Api/
+  Program.cs                 # cấu hình DI, EF Core, cookie auth, antiforgery, rate limit, pipeline middleware
+  appsettings.json           # cấu hình chung (KHÔNG có chuỗi kết nối/mật khẩu)
+  appsettings.Development.json  # chuỗi kết nối dev dùng Windows Authentication
+  Controllers/               # AuthController, ProductsController, OrdersController, ContactController
+  Dtos/Dtos.cs               # dữ liệu vào/ra + DataAnnotations để kiểm tra đầu vào
+  Models/Entities.cs         # entity: User, Product, Order, OrderItem, ContactMessage, AuditLog
+  Data/AppDbContext.cs       # DbContext: bảng, ràng buộc, chỉ mục, seed dữ liệu
+  Data/Migrations/           # migration do EF Core sinh ra (+ 1 migration viết tay tạo trigger)
+  Security/                  # middleware bảo mật, kiểm tra phiên, CAPTCHA, audit log, validator
+database/create-app-login.sql  # tạo tài khoản SQL quyền tối thiểu cho production
+```
+
+### Các endpoint
+
+| Method | URL | Quyền | Chức năng |
+| --- | --- | --- | --- |
+| GET | `/api/csrf` | Mọi người | Lấy anti-forgery token |
+| GET | `/api/captcha` | Mọi người | Lấy câu hỏi CAPTCHA |
+| GET | `/api/auth/me` | Mọi người | Người dùng hiện tại |
+| POST | `/api/auth/register` | Mọi người | Đăng ký |
+| POST | `/api/auth/login` | Mọi người | Đăng nhập |
+| POST | `/api/auth/logout` | Đã đăng nhập | Đăng xuất |
+| PUT | `/api/auth/profile` | Đã đăng nhập | Cập nhật họ tên |
+| PUT | `/api/auth/password` | Đã đăng nhập | Đổi mật khẩu |
+| GET | `/api/products` (`?featured=true&q=`) | Mọi người | Danh sách / tìm kiếm sản phẩm |
+| GET | `/api/products/{slug}` | Mọi người | Chi tiết sản phẩm |
+| POST | `/api/products` | Admin | Thêm sản phẩm |
+| PUT | `/api/products/{id}` | Admin | Sửa sản phẩm |
+| DELETE | `/api/products/{id}` | Admin | Xóa sản phẩm (chưa có đơn hàng) |
+| GET | `/api/orders` | Đã đăng nhập | Đơn hàng của tôi |
+| GET | `/api/orders/{id}` | Chủ đơn | Chi tiết đơn |
+| POST | `/api/orders` | Đã đăng nhập | Đặt hàng |
+| DELETE | `/api/orders/{id}` | Chủ đơn | Hủy đơn đang chờ xác nhận |
+| GET | `/api/orders/all` | Admin | Tất cả đơn hàng |
+| PUT | `/api/orders/{id}/status` | Admin | Cập nhật trạng thái đơn |
+| POST | `/api/contact` | Mọi người | Gửi lời nhắn |
+| GET | `/api/contact` | Admin | Danh sách lời nhắn |
+| DELETE | `/api/contact/{id}` | Admin | Xóa lời nhắn |
+
+---
+
+## 3. Front-end gọi API bằng Axios
+
+- [`src/api/client.js`](src/api/client.js): tạo một `axios.create({ baseURL: '/api', withCredentials: true })` với 2 interceptor.
+  - **Request interceptor:** tự gắn header `X-CSRF-Token` cho POST/PUT/DELETE.
+  - **Response interceptor:** lưu token mới; nếu token hết hạn thì lấy token mới và gửi lại; chuẩn hóa lỗi thành `ApiError`.
+- [`src/api/services.js`](src/api/services.js): các hàm theo tài nguyên, dùng đúng phương thức của Axios.
+
+```js
+productApi.list()                    // http.get('/products')
+productApi.create(product)           // http.post('/products', product)
+productApi.update(id, product)       // http.put(`/products/${id}`, product)
+productApi.remove(id)                // http.delete(`/products/${id}`)
+```
+
+Trang [`/quan-tri`](src/pages/Admin.jsx) (chỉ admin) dùng đủ GET/POST/PUT/DELETE. Trang tài khoản dùng PUT (đổi tên, đổi mật khẩu); trang chi tiết đơn dùng DELETE (hủy đơn).
+
+Ở môi trường dev, Vite (cổng 3000) chuyển tiếp `/api` sang ASP.NET Core (cổng 5080) – xem [`vite.config.js`](vite.config.js). Front-end và API vì vậy cùng origin, không cần bật CORS.
+
+---
+
+## 4. Kết nối CSDL & EF Core
+
+### 4.1 Cài đặt EF Core
+
+```bash
+cd backend/LanViet.Api
+dotnet add package Microsoft.EntityFrameworkCore.SqlServer --version 8.0.11   # provider SQL Server
+dotnet add package Microsoft.EntityFrameworkCore.Design --version 8.0.11      # cần cho lệnh migration
+dotnet new tool-manifest            # (ở thư mục gốc repo) tạo .config/dotnet-tools.json
+dotnet tool install dotnet-ef --version 8.0.11
+```
+
+### 4.2 Cấu hình kết nối
+
+`appsettings.Development.json` dùng **Windows Authentication**, nên không có mật khẩu nào nằm trong repo (§5.6.1, §5.6.6):
+
+```json
+"ConnectionStrings": {
+  "Default": "Server=localhost;Database=LanVietShop;Trusted_Connection=True;Encrypt=True;TrustServerCertificate=True"
+}
+```
+
+`Program.cs` đăng ký DbContext:
+
+```csharp
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Default"), sql => sql.CommandTimeout(15)));
+```
+
+Ở production, `appsettings.json` để trống chuỗi kết nối; giá trị thật truyền qua biến môi trường `ConnectionStrings__Default`.
+
+### 4.3 Migration
+
+| Việc | Lệnh |
 | --- | --- |
-| `/` | Trang chủ |
-| `/about-us` | Giới thiệu |
-| `/san-pham`, `/san-pham?q=...` | Danh sách / tìm kiếm sản phẩm |
-| `/san-pham/:slug` | Chi tiết sản phẩm |
-| `/gio-hang` | Giỏ hàng & đặt hàng |
-| `/lien-he` | Liên hệ |
-| `/dang-nhap`, `/dang-ky` | Đăng nhập / đăng ký |
-| `/tai-khoan`, `/tai-khoan/don-hang/:id` | Tài khoản, đơn hàng (cần đăng nhập) |
-| `*` | Trang 404 |
+| Tạo migration mới sau khi sửa entity/DbContext | `npm run db:migration -- TenMigration` (hoặc `dotnet ef migrations add TenMigration -o Data/Migrations`) |
+| Áp migration vào CSDL | `npm run db:update` (hoặc `dotnet ef database update`) |
+| Xem danh sách migration | `dotnet ef migrations list` |
+| Kiểm tra model có thay đổi chưa tạo migration | `dotnet ef migrations has-pending-model-changes` |
+| Quay về migration trước | `dotnet ef database update TenMigrationTruoc` |
 
-Chuyển trang bằng cách bấm menu (`<NavLink>`) hoặc gõ thẳng URL. Ở production, máy chủ trả `index.html` cho mọi đường dẫn không thuộc `/api`, nên mở trực tiếp `http://localhost:3000/about-us` vẫn hiện đúng trang.
+Các migration trong project:
 
-## Cấu trúc thư mục
+1. **`InitialCreate`** – EF Core tự sinh: 6 bảng, khóa chính/ngoại, `UNIQUE`, `CHECK`, chỉ mục, 8 sản phẩm mẫu (`HasData`).
+2. **`AddSecurityTriggers`** – viết tay bằng `migrationBuilder.Sql(...)`.
+   - Trigger cấm `UPDATE`/`DELETE` bảng `AuditLogs`.
+   - Trigger cấm sửa `OrderItems` sau khi đặt hàng.
 
-```
-index.html               # HTML gốc
-src/
-  main.jsx, App.jsx      # khai báo BrowserRouter + các Route
-  pages/                 # Home, AboutUs, Products, ProductDetail, Cart, Contact, Login, Register, Account, OrderDetail, NotFound
-  components/            # Header, Footer, Layout, ProductCard, OrchidArt (SVG), FormField, ProtectedRoute
-  context/               # AuthContext, CartContext
-  api/client.js          # gọi API kèm CSRF token
-  styles/                # global.css, home.css (định dạng trang chủ), pages.css
-server/
-  index.js               # Express: header bảo mật, giới hạn request, xử lý lỗi, phục vụ dist/
-  config.js, db.js       # cấu hình qua biến môi trường; SQLite + prepared statements
-  security/              # session.js (phiên + CSRF), validate.js (kiểm tra đầu vào), audit.js (ghi log)
-  routes/                # auth.js, shop.js
-```
+---
 
-## Các quy tắc bảo mật đã áp dụng
+## 5. Các quy tắc bảo mật đã áp dụng
 
-Số mục (§) theo file `quy-tac-trien-khai-web-an-toan.md`.
+Số mục (§) theo file quy tắc.
 
-| Quy tắc | Cách làm trong project |
+| Quy tắc | Cách làm |
 | --- | --- |
-| §0, §1.2 Kiểm tra đầu vào ở máy chủ | `server/security/validate.js`: kiểm tra độ dài, định dạng theo whitelist, chuẩn hóa Unicode NFC trước khi kiểm tra, chặn ký tự điều khiển, từ chối trường lạ (`onlyKeys`). Phía client cũng kiểm tra, nhưng chỉ để hiện lỗi sớm cho người dùng. |
-| §2.1 XSS | React tự escape mọi dữ liệu hiển thị; không dùng `dangerouslySetInnerHTML`. CSP chặt: `script-src 'self'`, `object-src 'none'`. Cookie phiên `HttpOnly`. Màu SVG được kiểm tra bằng regex trước khi render. |
-| §2.2 CSRF | Token đồng bộ lưu trong phiên, gửi qua header `X-CSRF-Token`, so sánh bằng `timingSafeEqual`. Kiểm tra header `Origin`. Cookie `SameSite=Strict`. Không thay đổi dữ liệu qua GET. |
-| §2.3 SQL Injection | 100% truy vấn dùng prepared statement với tham số `?`. Từ khóa tìm kiếm được escape `% _` trong mệnh đề LIKE. |
-| §2.4 Xác thực | Mật khẩu băm bằng **bcrypt** (cost 12, có salt). Mật khẩu ≥ 10 ký tự, đủ 4 loại ký tự, không chứa tên đăng nhập. Sai 5 lần thì khóa tài khoản 15 phút, kèm giới hạn theo IP. CAPTCHA do máy chủ sinh, chỉ dùng một lần, khi đăng ký. Thông báo lỗi đăng nhập chung chung, và so sánh với hash giả khi email không tồn tại (chống dò tài khoản qua thời gian phản hồi). Không có tài khoản mặc định, không hardcode thông tin đăng nhập. |
-| §2.5 Lỗi logic | Giá và tổng tiền luôn tính lại ở máy chủ, client chỉ gửi `productId` + `quantity`. Trừ tồn kho trong transaction với điều kiện `stock >= ?`. Trigger CSDL cấm sửa chi tiết đơn hàng đã đặt. Quyền được đọc lại từ CSDL ở mỗi request. |
-| §2.6 Trình duyệt | HSTS, `X-Frame-Options: DENY` + `frame-ancestors 'none'`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`. Không bật CORS (chỉ cùng origin). Chống open redirect sau đăng nhập (`safeRedirect`). |
-| §2.7 Case-study | Đổi mật khẩu bắt buộc nhập đúng mật khẩu hiện tại (mật khẩu rỗng bị từ chối). Bảng `audit_log` chỉ cho thêm: trigger cấm UPDATE/DELETE. |
-| §3.1 Máy chủ web | Chỉ cho phép GET/HEAD/POST (các phương thức khác trả 405). Tắt `X-Powered-By`. Không liệt kê thư mục; chặn dotfiles. Giới hạn body 10 KB, chỉ nhận JSON. |
-| §3.3 Phiên | Token 256 bit từ CSPRNG; CSDL chỉ lưu SHA-256 của token. Cookie `HttpOnly` + `SameSite=Strict` + `Secure` + tiền tố `__Host-` ở production. Hết hạn sau 30 phút không hoạt động, tối đa 8 giờ. Đăng nhập cấp phiên mới và hủy phiên cũ (chống session fixation; mỗi người một phiên). Đăng xuất hủy phiên. Không đặt token lên URL. |
-| §3.4 Hệ thống file | File CSDL nằm ngoài thư mục web (`server/data/`, đã gitignore). `.gitignore` loại `.env`, `*.bak`, `*.old`… Build không xuất source map. Không có thông tin nhạy cảm trong comment. |
-| §4.4 Xử lý ngoại lệ | Bộ xử lý lỗi tập trung: client chỉ nhận thông báo chung, chi tiết chỉ ghi ở log máy chủ. Không ghi mật khẩu/token vào log. |
-| §5.4 DoS | Giới hạn tần suất: chung 300 request/15 phút, đăng nhập, đăng ký, liên hệ, đặt hàng. Tìm kiếm tối đa 60 ký tự, trả tối đa 50 dòng. Giỏ hàng tối đa 20 dòng × 20 sản phẩm. `busy_timeout` cho SQLite. |
-| §5.1 Toàn vẹn | Ràng buộc `CHECK`, `UNIQUE`, khóa ngoại; transaction cho đặt hàng. |
-| §5.6.4 Truy cập đối tượng | API đơn hàng luôn lọc `WHERE id = ? AND user_id = ?` (chống IDOR, OWASP A01). |
-| §5.7.4 Kiểm toán | Ghi log đăng ký, đăng nhập thành công/thất bại, khóa tài khoản, đổi mật khẩu, đặt hàng, lỗi CSRF, lỗi máy chủ (kèm IP, user-agent, thời gian). |
-| A06 Thành phần lỗi thời | Dùng phiên bản mới nhất của các thư viện; kiểm tra bằng `npm run audit`. |
-
-### Giới hạn và việc cần làm khi triển khai thật
-
-- HTTPS do reverse proxy đảm nhận (nginx/Render…). Khi đó đặt `TRUST_PROXY=1`, `FORCE_HTTPS=1`, `ALLOWED_ORIGINS=https://ten-mien-cua-ban`.
-- SQLite chạy cùng máy với ứng dụng. Các quy tắc phân quyền tài khoản DBMS (§5.6.1–5.6.4), TDE, tường lửa CSDL và sao lưu (§5.7) sẽ áp dụng khi chuyển sang MySQL/SQL Server.
-- CAPTCHA phép tính là bản đơn giản để minh họa. Hệ thống thật nên dùng reCAPTCHA/Turnstile.
+| §0, §1.2 Kiểm tra đầu vào ở máy chủ | DTO + DataAnnotations (`Required`, `StringLength`, `RegularExpression`, `Range`) và validator tự viết `StrongPassword`, `SafeText`. Chuỗi được chuẩn hóa Unicode NFC trước khi kiểm tra. JSON có trường lạ bị từ chối (`UnmappedMemberHandling.Disallow`) để chống mass assignment. Body chỉ nhận JSON, tối đa 32 KB. |
+| §2.1 XSS | React tự escape; không dùng `dangerouslySetInnerHTML`. CSP chặt (`script-src 'self'`, `object-src 'none'`, `frame-ancestors 'none'`). Cookie `HttpOnly`. |
+| §2.2 CSRF | Anti-forgery token của ASP.NET Core (gắn với danh tính người dùng) gửi qua header `X-CSRF-Token`. Kiểm tra header `Origin`. Cookie `SameSite=Strict`. GET không thay đổi dữ liệu. |
+| §2.3 SQL Injection | EF Core/LINQ luôn sinh câu SQL có tham số. Tìm kiếm dùng `EF.Functions.Like` và escape ký tự đại diện. |
+| §2.4 Xác thực | bcrypt (cost 12). Mật khẩu ≥ 10 ký tự, đủ 4 loại ký tự, không chứa tên đăng nhập. Sai 5 lần thì khóa 15 phút, kèm rate limit theo IP. CAPTCHA mã hóa bằng Data Protection, hạn 5 phút, dùng một lần. Thông báo lỗi chung chung; dùng hash giả để thời gian phản hồi như nhau. Không có tài khoản mặc định. |
+| §2.5 Lỗi logic | Giá/tổng tiền tính ở máy chủ. Trừ tồn kho bằng `UPDATE ... WHERE Stock >= qty` trong transaction. Trigger cấm sửa `OrderItems`. Quyền (role) đọc lại từ CSDL ở mỗi request. |
+| §2.6 Trình duyệt | HSTS (production), `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, COOP/CORP. Không bật CORS. `AllowedHosts` giới hạn Host header. |
+| §2.7 Case-study | Đổi mật khẩu bắt buộc mật khẩu hiện tại. `AuditLogs` chỉ cho thêm (trigger + `DENY` cho tài khoản ứng dụng). |
+| §3.1 Máy chủ web | Chỉ cho phép GET/HEAD/POST/PUT/DELETE (các phương thức khác trả 405). Tắt header `Server`. Swagger chỉ có ở Development. Không liệt kê thư mục. |
+| §3.3 Phiên | Cookie auth của ASP.NET Core (ticket mã hóa). `HttpOnly` + `SameSite=Strict` + `Secure` + tiền tố `__Host-` ở production. Hết hạn sau 30 phút không hoạt động, tối đa 8 giờ. `SecurityStamp` đổi khi đăng nhập/đăng xuất/đổi mật khẩu: mỗi người một phiên, cookie cũ (kể cả bị đánh cắp) mất hiệu lực ngay. |
+| §3.4 Hệ thống file | `.gitignore` loại `bin/`, `obj/`, `.env`, file CSDL, `*.bak`… Build không xuất source map. |
+| §4.4 Xử lý ngoại lệ | `UseExceptionHandler`: client chỉ nhận thông báo chung; chi tiết ghi log máy chủ. |
+| §5.1 Toàn vẹn | `CHECK`, `UNIQUE`, khóa ngoại `RESTRICT`, transaction. |
+| §5.4 DoS | Rate limit: chung 300 request/15 phút; đăng nhập, đăng ký, liên hệ, đặt hàng có giới hạn riêng. Timeout truy vấn 15 giây. Giới hạn số dòng trả về. |
+| §5.6.1 Xác thực CSDL | Dev dùng Windows Authentication (xác thực qua hệ điều hành, khuyến nghị của Microsoft). |
+| §5.6.4 Quyền đối tượng | [`database/create-app-login.sql`](database/create-app-login.sql): tài khoản ứng dụng chỉ có `db_datareader` + `db_datawriter`, `DENY` các lệnh DDL và `DENY UPDATE/DELETE` trên `AuditLogs`. API đơn hàng luôn lọc theo `UserId` (chống IDOR). |
+| §5.6.6 Chuỗi kết nối | Không có mật khẩu trong repo; production truyền qua biến môi trường. |
+| §5.7.4 Kiểm toán | Bảng `AuditLogs`: đăng ký, đăng nhập thành công/thất bại, khóa tài khoản, đổi mật khẩu, thao tác admin, đặt/hủy đơn, lỗi CSRF, rate limit, lỗi máy chủ. |
+| A06 Thành phần lỗi thời | `npm run audit` kiểm tra cả gói npm và gói NuGet có lỗ hổng. |

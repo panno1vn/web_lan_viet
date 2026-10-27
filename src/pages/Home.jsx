@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import OrchidArt from '../components/OrchidArt.jsx';
 import GardenHero from '../components/GardenHero.jsx';
 import ProductCard from '../components/ProductCard.jsx';
-import { api } from '../api/client.js';
+import { productApi } from '../api/services.js';
 import '../styles/home.css';
 
 const PROMISES = [
@@ -32,8 +32,8 @@ export default function Home() {
 
   useEffect(() => {
     let alive = true;
-    api('/products?featured=1')
-      .then((d) => alive && setFeatured(d.products))
+    productApi.featured()
+      .then((products) => alive && setFeatured(products))
       .catch((e) => alive && setError(e.message));
     return () => {
       alive = false;

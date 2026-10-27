@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router';
 import FormField from '../components/FormField.jsx';
-import { api } from '../api/client.js';
+import { authApi } from '../api/services.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { passwordProblems, rules } from '../utils/format.js';
 
@@ -12,7 +12,7 @@ export default function Register() {
   const navigate = useNavigate();
   const [form, setForm] = useState(EMPTY);
   const [errors, setErrors] = useState({});
-  const [question, setQuestion] = useState('');
+  const [challenge, setChallenge] = useState({ question: '', token: '' });
   const [serverError, setServerError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -21,9 +21,9 @@ export default function Register() {
   // Chỉ hiển thị câu hỏi của request mới nhất (máy chủ cũng chỉ giữ đáp án mới nhất)
   const loadCaptcha = useCallback(() => {
     const reqId = ++latestRequest.current;
-    api('/captcha')
-      .then((d) => reqId === latestRequest.current && setQuestion(d.question))
-      .catch(() => reqId === latestRequest.current && setQuestion(''));
+    authApi.captcha()
+      .then((d) => reqId === latestRequest.current && setChallenge(d))
+      .catch(() => reqId === latestRequest.current && setChallenge({ question: '', token: '' }));
   }, []);
 
   useEffect(loadCaptcha, [loadCaptcha]);
@@ -49,14 +49,13 @@ export default function Register() {
     if (!validate()) return;
     setBusy(true);
     try {
-      await api('/auth/register', {
-        method: 'POST',
-        body: {
-          fullName: form.fullName.trim(),
-          email: form.email.trim(),
-          password: form.password,
-          captcha: form.captcha.trim(),
-        },
+      await authApi.register({
+        fullName: form.fullName.trim(),
+        email: form.email.trim(),
+        password: form.password,
+        captcha: form.captcha.trim(),
+        // Token chứa đáp án đã mã hóa + ký ở máy chủ, client không đọc/sửa được
+        captchaToken: challenge.token,
       });
       navigate('/dang-nhap', { state: { registered: true } });
     } catch (err) {
@@ -89,7 +88,7 @@ export default function Register() {
         />
         <FormField label="Nhập lại mật khẩu" type="password" value={form.confirm} onChange={set('confirm')} maxLength={72} autoComplete="new-password" error={errors.confirm} />
         <FormField
-          label={`Xác nhận bạn không phải robot: ${question || '…'}`}
+          label={`Xác nhận bạn không phải robot: ${challenge.question || '…'}`}
           inputMode="numeric"
           value={form.captcha}
           onChange={set('captcha')}

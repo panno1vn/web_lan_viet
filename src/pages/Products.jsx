@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import ProductCard from '../components/ProductCard.jsx';
-import { api } from '../api/client.js';
+import { productApi } from '../api/services.js';
 import '../styles/catalog.css';
 
 const SPECIES = ['Hồ điệp', 'Dendrobium', 'Cattleya', 'Vanda', 'Mokara', 'Lan hài', 'Oncidium'];
@@ -37,8 +37,8 @@ export default function Products() {
     let alive = true;
     setLoading(true);
     setError('');
-    api('/products')
-      .then(data => { if (alive) setProducts(data.products); })
+    productApi.list()
+      .then(list => { if (alive) setProducts(list); })
       .catch(err => { if (alive) setError(err.message); })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };

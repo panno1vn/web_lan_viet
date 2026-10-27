@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { api } from '../api/client.js';
+import { authApi } from '../api/services.js';
 
 const AuthContext = createContext(null);
 
@@ -10,8 +10,7 @@ export function AuthProvider({ children }) {
   // Trạng thái đăng nhập luôn lấy từ máy chủ, không lưu thông tin đăng nhập ở localStorage
   const refresh = useCallback(async () => {
     try {
-      const data = await api('/auth/me');
-      setUser(data.user);
+      setUser(await authApi.me());
     } catch {
       setUser(null);
     } finally {
@@ -24,20 +23,20 @@ export function AuthProvider({ children }) {
   }, [refresh]);
 
   const login = useCallback(async (email, password) => {
-    const data = await api('/auth/login', { method: 'POST', body: { email, password } });
-    setUser(data.user);
-    return data.user;
+    const loggedIn = await authApi.login(email, password);
+    setUser(loggedIn);
+    return loggedIn;
   }, []);
 
   const logout = useCallback(async () => {
     try {
-      await api('/auth/logout', { method: 'POST' });
+      await authApi.logout();
     } finally {
       setUser(null);
     }
   }, []);
 
-  const value = useMemo(() => ({ user, loading, login, logout, refresh }), [user, loading, login, logout, refresh]);
+  const value = useMemo(() => ({ user, setUser, loading, login, logout, refresh }), [user, loading, login, logout, refresh]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

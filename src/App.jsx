@@ -11,6 +11,8 @@ import Register from './pages/Register.jsx';
 import Account from './pages/Account.jsx';
 import OrderDetail from './pages/OrderDetail.jsx';
 import NotFound from './pages/NotFound.jsx';
+import Admin from './pages/Admin.jsx';
+import AdminRoute from './components/AdminRoute.jsx';
 
 export default function App() {
   return (
@@ -27,6 +29,9 @@ export default function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="tai-khoan" element={<Account />} />
           <Route path="tai-khoan/don-hang/:id" element={<OrderDetail />} />
+        </Route>
+        <Route element={<AdminRoute />}>
+          <Route path="quan-tri" element={<Admin />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Route>

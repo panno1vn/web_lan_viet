@@ -14,6 +14,7 @@ import '@fontsource/be-vietnam-pro/latin-500.css';
 import '@fontsource/be-vietnam-pro/vietnamese-500.css';
 import './styles/global.css';
 import './styles/pages.css';
+import './styles/admin.css';
 import './styles/garden.css';
 import './styles/typography.css';
 

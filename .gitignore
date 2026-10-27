@@ -2,13 +2,21 @@
 node_modules/
 dist/
 
+# .NET build output
+bin/
+obj/
+*.user
+.vs/
+
 # Bí mật & cấu hình môi trường - KHÔNG đưa lên GitHub
 .env
 .env.*
-!.env.example
+appsettings.*.local.json
+secrets.json
 
-# Cơ sở dữ liệu & log
-server/data/
+# Cơ sở dữ liệu, file sao lưu CSDL & log
+*.mdf
+*.ldf
 *.db
 *.db-*
 *.log
